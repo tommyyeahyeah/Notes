@@ -48,7 +48,8 @@ classdef simulate
 
             Asim(1) = Agrid(A0_ind); % Productivity in period 1.
             ysim(1) = yout(k0_ind,A0_ind); % Output in period 1 given k0 and A0.
-            csim(1) = cpol(k0_ind,A0_ind); % Consumption in period 1 given k0 and A0.
+            ytax = model.tax(ysim(1), par); %% new
+            csim(1) = ytax - ipol(k0_ind,A0_ind); %% new
             nsim(1) = npol(k0_ind,A0_ind); % Labor supply in period 1 given k0 and A0.
             ksim(1) = kpol(k0_ind,A0_ind); % Capital choice for period 2 given k0 and A0.
             isim(1) = ipol(k0_ind,A0_ind); % Investment in period 1 given k0 and A0.
@@ -63,7 +64,8 @@ classdef simulate
                 kt_ind = find(ksim(j-1)==kgrid); % Capital choice in the previous period is the state today. Find where the latter is on the grid.
                 Asim(j) = Agrid(A0_ind); % Productivity in period t.
                 ysim(j) = yout(kt_ind,A0_ind); % Output in period t.
-                csim(j) = cpol(kt_ind,A0_ind); % Consumption in period t.
+                ytax = model.tax(yout(kt_ind,A0_ind), par);     %% new income (after tax)
+                csim(j) = ytax - ipol(kt_ind,A0_ind);           %% new consumption
                 nsim(j) = npol(kt_ind,A0_ind); % Labor supply in period t.
                 ksim(j) = kpol(kt_ind,A0_ind); % Capital stock for period t+1.
                 isim(j) = ipol(kt_ind,A0_ind); % Investment in period t.

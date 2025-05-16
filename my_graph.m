@@ -14,7 +14,7 @@ classdef my_graph
     methods(Static)
         %% Plot value and policy functions.
         
-        function [] = plot_policy(par,sol,sim,figout)
+        function [] = plot_policy(par,sol,sim)
             %% Plot production function.
             
             figure(1)
@@ -23,10 +23,7 @@ classdef my_graph
                 xlabel({'$k_{t}$'},'Interpreter','latex')
                 ylabel({'$y_{t}$'},'Interpreter','latex') 
             title('Production Function')
-            
-            fig_name = strcat(figout,'ypol.fig');
-            savefig(fig_name)
-            
+
             %% Plot capital policy function.
             
             figure(2)
@@ -35,10 +32,7 @@ classdef my_graph
                 xlabel({'$k_{t}$'},'Interpreter','latex')
                 ylabel({'$k_{t+1}$'},'Interpreter','latex') 
             title('Capital Policy Function')
-            
-            fig_name = strcat(figout,'kpol.fig');
-            savefig(fig_name)
-            
+
             %% Plot consumption policy function.
             
             figure(3)
@@ -48,9 +42,6 @@ classdef my_graph
                 ylabel({'$c_{t}$'},'Interpreter','latex') 
             title('Consumption Policy Function')
             
-            fig_name = strcat(figout,'cpol.fig');
-            savefig(fig_name)
-            
             %% Plot investrment policy function.
             
             figure(4)
@@ -59,11 +50,7 @@ classdef my_graph
                 xlabel({'$k_{t}$'},'Interpreter','latex')
                 ylabel({'$i_{t}$'},'Interpreter','latex') 
             title('Investment Policy Function')
-            
-            fig_name = strcat(figout,'ipol.fig');
-            savefig(fig_name)
-            
-            
+
             %% Plot labor supply policy function.
             
             figure(5)
@@ -72,10 +59,7 @@ classdef my_graph
                 xlabel({'$k_{t}$'},'Interpreter','latex')
                 ylabel({'$n_{t}$'},'Interpreter','latex') 
             title('Labor Supply Policy Function')
-            
-            fig_name = strcat(figout,'npol.fig');
-            savefig(fig_name)
-            
+
             %% Plot value function.
             
             figure(6)
@@ -84,9 +68,6 @@ classdef my_graph
                 xlabel({'$k_{t}$'},'Interpreter','latex')
                 ylabel({'$v_t(k_t,A_t)$'},'Interpreter','latex') 
             title('Value Function')
-
-            fig_name = strcat(figout,'vfun.fig');
-            savefig(fig_name)
             
             %% Plot simulated output.
 
@@ -99,9 +80,6 @@ classdef my_graph
                 ylabel({'$y^{sim}_t$'},'Interpreter','latex') 
             title('Simulated Output')
 
-            fig_name = strcat(figout,'ysim.fig');
-            savefig(fig_name)
-
             %% Plot simulated capital choice.
 
             figure(8)
@@ -110,9 +88,6 @@ classdef my_graph
                 xlabel({'Time'},'Interpreter','latex')
                 ylabel({'$k^{sim}_t$'},'Interpreter','latex') 
             title('Simulated Capital Choice')
-
-            fig_name = strcat(figout,'ksim.fig');
-            savefig(fig_name)
 
             %% Plot simulated consumption.
 
@@ -123,9 +98,6 @@ classdef my_graph
                 ylabel({'$c^{sim}_t$'},'Interpreter','latex') 
             title('Simulated Consumption')
 
-            fig_name = strcat(figout,'csim.fig');
-            savefig(fig_name)
-
             %% Plot simulated investment.
 
             figure(10)
@@ -134,9 +106,6 @@ classdef my_graph
                 xlabel({'Time'},'Interpreter','latex')
                 ylabel({'$i^{sim}_t$'},'Interpreter','latex') 
             title('Simulated Investment')
-
-            fig_name = strcat(figout,'isim.fig');
-            savefig(fig_name)
 
 
             %% Plot simulated labor supply.
@@ -148,9 +117,6 @@ classdef my_graph
                 ylabel({'$n^{sim}_t$'},'Interpreter','latex') 
             title('Simulated Labor Supply')
 
-            fig_name = strcat(figout,'nsim.fig');
-            savefig(fig_name)
-
             %% Plot simulated utility.
 
             figure(12)
@@ -160,9 +126,6 @@ classdef my_graph
                 ylabel({'$u^{sim}_t$'},'Interpreter','latex') 
             title('Simulated Utility')
 
-            fig_name = strcat(figout,'usim.fig');
-            savefig(fig_name)
-
             %% Plot simulated productivity.
 
             figure(13)
@@ -171,9 +134,6 @@ classdef my_graph
                 xlabel({'Time'},'Interpreter','latex')
                 ylabel({'$A^{sim}_t$'},'Interpreter','latex') 
             title('Simulated Productivity')
-
-            fig_name = strcat(figout,'Asim.fig');
-            savefig(fig_name)
 
         end
         
