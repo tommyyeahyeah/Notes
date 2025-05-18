@@ -1,129 +1,121 @@
-%% File Info.
-
-%{
-
-    solve.m
-    -------
-    This code solves the model.
-
-%}
-
-%% Solve class.
-
 classdef solve
     methods(Static)
-        %% Solve the model using VFI. 
-        
-        function sol = grow(par)            
-            %% Structure array for model solution.
-            
+        function sol = grow(par)
             sol = struct();
-            
-            %% Model parameters, grids and functions.
-            
-            beta = par.beta; % Discount factor.
-            alpha = par.alpha; % Capital share of income.
-            delta = par.delta; % Depreciation rate.
-            sigma = par.sigma; % CRRA.
-            gamma = par.gamma; % Weight on leisure.
-            nu = par.nu; % Frisch elasticity.
 
-            klen = par.klen; % Grid size for k.
-            kgrid = par.kgrid; % Grid for k (state and choice).
+            %% Parameters
+            beta = par.beta;
+            alpha = par.alpha;
+            delta = par.delta;
+            sigma = par.sigma;
+            gamma = par.gamma;
+            nu = par.nu;
+            slen = par.slen;
+            klen = par.klen;
+            Alen = par.Alen;
 
-            Alen = par.Alen; % Grid size for A.
-            Agrid = par.Agrid; % Grid for A.
-            pmat = par.pmat; % Grid for A.
+            kgrid = par.kgrid;
+            Agrid = par.Agrid;
+            pmat = par.pmat;
 
-            kmat = repmat(kgrid,1,Alen); % k for each value of A.
-            Amat = repmat(Agrid,klen,1); % A for each value of k.
+            kmat = repmat(kgrid, 1, Alen);
+            Amat = repmat(Agrid, klen, 1);
 
-            %% Labor choice.
+            %% Preallocate
+            n0 = zeros(klen, klen, Alen, slen);
+            v0 = zeros(klen, Alen, slen); % TEMPORARY INIT for test
+            v1 = zeros(klen, Alen, slen);
+            k1 = zeros(klen, Alen, slen);
+            n1 = zeros(klen, Alen, slen);
 
-            n0 = zeros(klen,klen,Alen); % Container for n.
-
+            %% Labor supply
             fprintf('------------Solving for Labor Supply.------------\n\n')
+
+            opts = optimset('TolX', 1e-6, 'Display', 'off');  %% ✅ NEW: tighter solver options
             
-            for h1 = 1:klen % Loop over k state.
-                for h2 = 1:klen % Loop over k choice.
-                    for h3 = 1:Alen % Loop over A state.
-                        % Intratemporal condition.
-                        fn = @(n)(((Agrid(h3)*(kgrid(h1)^alpha)*(n^(1-alpha))+(1-delta)*kgrid(h1)-kgrid(h2))^(-sigma))*(Agrid(h3)*(1-alpha)*(kgrid(h1)^alpha)*(n^(-alpha)))+gamma*(1-n)^(1/nu));
-                        n0(h1,h2,h3) = fminbnd(fn,0,1);
+            for h1 = 1:klen
+                for h2 = 1:klen
+                    for h3 = 1:Alen
+                        for s = 1:par.slen
+                            y_func = @(n) par.w(s) * Agrid(h3) * (kgrid(h1)^alpha) * n^(1 - alpha);
+                            i = kgrid(h2) - (1 - delta) * kgrid(h1);
+                            fn = @(n) ((y_func(n) - par.lambda * y_func(n)^(1 - par.tau) - i)^(-sigma)) ...
+                                    * (par.w(s) * Agrid(h3) * (1 - alpha) * (kgrid(h1)^alpha) * n^(-alpha)) ...
+                                    + gamma * (1 - n)^(1 / nu);
+            
+                            %% ✅ NEW: restrict upper bound to avoid n = 1 and stabilize
+                            n0(h1,h2,h3,s) = fminbnd(fn, 0.001, 0.999, opts);
+                        end
                     end
                 end
             end
-
             fprintf('------------Labor Supply Done.------------\n\n')
-            
-            %% Value Function Iteration.
 
-            y0 = Amat.*(kmat.^alpha).*(squeeze(n0(:,1,:)).^(1-alpha)); % Output in the "last period", given combinations of k and A and the value of n associated with the lowest possible k'.
-            i0 = (1-delta)*kmat; % In the "last period," k' is zero but k still depreciates.
-            c0 = lambda*y0(1-tau)-i0; % Consumption in "last period."
-            g0 = y0-lambda*y0(1-tau);
-            v0 = model.utility(c0,squeeze(n0(:,1,:)),par)./(1-beta); % Guess of value function for each combination of k and A; each row corresponds to a given k and each column corresponds to a given A.
-
-            v1 = zeros(klen,Alen.skill); % Container for V.
-            k1 = zeros(klen,Alen); % Container for k'.
-            n1 = zeros(klen,Alen); % Container for n.
-                            
+            %% VFI loop
             crit = 1e-6;
             maxiter = 10000;
             diff = 1;
             iter = 0;
-            
+
             fprintf('------------Beginning Value Function Iteration.------------\n\n')
-            
-            while diff > crit && iter < maxiter % Iterate on the Bellman Equation until convergence.
-                
-                for p = 1:klen % Loop over the k-states.
-                    for j = 1:Alen % Loop over the A-states.
 
-                        % Macro variables.
-                        y = Agrid(j)*(kgrid(p)^alpha)*(squeeze(n0(p,:,j)').^(1-alpha)); % Output given k and A, kgrid(p) and Agrid(j) respectively, and possible values of n.
-                        i = kgrid-(1-delta)*kgrid(p); % Possible values for investment, i=k'-(1-delta)k, when choosing k' from kgrid and given k.
-                        c = y-i; % Possible values for consumption, c = y-i, given y and i.
+            while diff > crit && iter < maxiter
+                for p = 1:klen
+                    for j = 1:Alen
+                        for s = 1:slen
+                            nvec = squeeze(n0(p,:,j,s))';
+                            y = par.w(s) * Agrid(j) * (kgrid(p)^alpha) * (nvec.^(1 - alpha));
+                            kprime = kgrid;
+                            i = kprime - (1 - delta) * kgrid(p);
+                            T = par.lambda * y.^(1 - par.tau);
+                            c = y - T - i;
+                            g = max(mean(T(:)), 1e-4);
 
-                        % Solve the maximization problem.
-                        ev = v0*pmat(j,:)'; %  The next-period value function is the expected value function over each possible next-period A, conditional on the current state j.
-                        vall = model.utility(c,squeeze(n0(p,:,j))',par) + beta*ev; % Compute the value function for each choice of k', given k.
-                        vall(c<0) = -inf; % Set the value function to negative infinity when c < 0.
-                        [vmax,ind] = max(vall); % Maximize: vmax is the maximized value function; ind is where it is in the grid.
-                    
-                        % Store values.
-                        v1(p,j) = vmax; % Maximized v.
-                        k1(p,j) = kgrid(ind); % Optimal k'.
-                        n1(p,j) = n0(p,ind,j); % Choice of n given k,k', and A.
+                            feasible = (c > 1e-6) & (i >= 0);
+                            vall = -Inf(length(kgrid), 1); %% ✅ required init
+
+                            if any(feasible)
+                                cvec = c(feasible);
+                                nvec_ok = nvec(feasible);
+                                vnext = squeeze(v0(:,:,s)) * pmat(j,:)';
+                                vall(feasible) = model.utility(cvec(:), nvec_ok(:), par, g) + beta * vnext(feasible);
+                            end
+
+                            [vmax, ind] = max(vall);
+                            v1(p,j,s) = vmax;
+                            k1(p,j,s) = kgrid(ind);
+                            n1(p,j,s) = n0(p,ind,j,s);
+
+                            if iter == 0 && p == 1 && j == 1 && s == 1
+                                fprintf('w: %.2f | y: %.4f | T: %.4f | i: %.4f | c: %.4f | g: %.4f\n', ...
+                                    par.w(s), y(1), T(1), i(1), c(1), g);
+                                fprintf('Valid c: %d of %d\n', sum(feasible), length(feasible));
+                                fprintf('vmax: %.6f\n', vmax);
+                            end
+                        end
                     end
                 end
-                
-                diff = norm(v1-v0); % Check for convergence.
-                v0 = v1; % Update guess of v.
-                
-                iter = iter + 1; % Update counter.
-                
-                % Print counter.
-                if mod(iter,25) == 0
-                    fprintf('Iteration: %d.\n',iter)
-                end
 
+                diff = norm(v1(:) - v0(:));
+                v0 = v1;
+                iter = iter + 1;
+
+                fprintf('Iteration %d: diff = %.10f\n', iter, diff)
             end
-                
-            fprintf('\nConverged in %d iterations.\n\n',iter)
-            
+
+            fprintf('\nConverged in %d iterations.\n', iter)
             fprintf('------------End of Value Function Iteration.------------\n')
-            
-            %% Macro variables, value, and policy functions.
-            
-            sol.y = Amat.*(kmat.^alpha).*(n1.^(1-alpha)); % Output.
-            sol.k = k1; % Capital policy function.
-            sol.n = n1; % Labor supply policy function.
-            sol.i = k1-((1-delta).*kmat); % Investment policy function.
-            sol.c = sol.y-sol.i; % Consumption policy function.
-            sol.v = v1; % Value function.
-            
+
+            %% Store results
+            sol.y = zeros(klen, Alen, slen);
+            for s = 1:slen
+                sol.y(:,:,s) = par.w(s) * Amat .* (kmat.^alpha) .* (n1(:,:,s).^(1 - alpha));
+            end
+            sol.k = k1;
+            sol.n = n1;
+            sol.i = k1 - ((1 - delta) * repmat(kgrid, 1, Alen, slen));
+            sol.c = sol.y - sol.i;
+            sol.v = v1;
         end
-        
     end
 end

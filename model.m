@@ -26,6 +26,18 @@ classdef model
             
             par.gamma = 1.00; % Weight on leisure: Higher values mean that leisure has a higher weight in the utility function.
             par.nu = 0.04; % Frisch Elasticity: Higher values of this mean that the labor choice becomes more sensitive to productivity shocks.
+            % Tax Parameters
+            par.lambda = 0.2; % Tax level
+            par.tau = 0.2; % Progressivity
+            par.chi = 0.5;
+
+            par.slen = 2;                               %% updated
+            par.prob_s = [0.5, 0.5];                    %% updated
+
+            wl = 2;                                   %% updated
+            wh = 5;                                   %% updated
+            par.w = [wl, wh];                           %% updated
+            par.skill_names = {'Low skill', 'High skill'}; %% optional for display
 
             assert(par.beta > 0 && par.beta < 1.00,'Discount factor should be between 0 and 1.\n')
             assert(par.sigma > 0,'CRRA should be at least 0.\n')
@@ -62,8 +74,8 @@ classdef model
             par.kss = (par.alpha/((1/par.beta)-(1-par.delta)))^(1/(1-par.alpha)); % Steady state capital in the deterministic case.
              
             par.klen = 300; % Grid size for k.
-            par.kmax = 1.25*par.kss; % Upper bound for k.
-            par.kmin = 0.75*par.kss; % Minimum k.
+            par.kmax = 0.9*par.kss; % Upper bound for k.
+            par.kmin = 0.01*par.kss; % Minimum k.
             
             assert(par.klen > 5,'Grid size for k should be positive and greater than 5.\n')
             assert(par.kmax > par.kmin,'Minimum k should be less than maximum value.\n')
@@ -111,22 +123,34 @@ classdef model
         
         %% Utility function.
         
-        function u = utility(c,n,g,par)
-            %% CRRA utility
-
-            % Leisure.
-            un = ((1-n).^(1+(1/par.nu)))./(1+(1/par.nu)); 
+             function u = utility(c, n, par, g)
+                        %% CRRA utility with public goods
             
-            % Consumption.
-            if par.sigma == 1
-                uc = log(c)+log(g); % Log utility.
-            else
-                uc = (c.^(1-par.sigma))./(1-par.sigma) + (g.^(1-par.sigma))./(1-par.sigma); % CRRA utility.
-            end
+                        if nargin < 4
+                            g = 1;
+                        end
+            
+                        if any(c <= 0, 'all') || any(g <= 0, 'all')
+                            u = -Inf;
+                            return
+                        end
+            
+                        un = ((1 - n).^(1 + 1 / par.nu)) ./ (1 + 1 / par.nu);
+            
+                        if par.sigma == 1
+                            uc = log(c);
+                            ug = log(g);
+                        else
+                            uc = (c.^(1 - par.sigma)) ./ (1 - par.sigma);
+                            ug = (g.^(1 - par.sigma)) ./ (1 - par.sigma);
+                        end
+            
+                        u = uc + par.gamma * un + par.chi * ug;
+                    end
+            %% Tax function: T(y) = y - lambda * y^(1 - tau)
 
-            % Total.
-            u = uc + par.gamma.*un;
-
+            function T = tax(y, par) %% new
+                T = y - par.lambda * y.^(1 - par.tau);
         end
         
     end

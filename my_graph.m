@@ -14,168 +14,116 @@ classdef my_graph
     methods(Static)
         %% Plot value and policy functions.
         
-        function [] = plot_policy(par,sol,sim,figout)
-            %% Plot production function.
+        function [] = plot_policy(par,sol,sim)   
+    %% Plot production function for Skill 1 and Skill 2 at A=1
+
+
+            figure (1)
+            hold on
+            A_indices = [1, round(par.Alen/2), par.Alen];  % A = low, mid, high
             
-            figure(1)
+            colors = lines(par.slen * length(A_indices));  % Generate enough unique colors
+            c = 1;
+            for s = 1:par.slen
+                for j = A_indices
+                    plot(par.kgrid, sol.y(:,j,s), ...
+                        'DisplayName', ['Skill ', num2str(s), ', A=', num2str(j)], ...
+                        'Color', colors(c,:));
+                    c = c + 1;
+                end
+            end
             
-            plot(par.kgrid,sol.y)
-                xlabel({'$k_{t}$'},'Interpreter','latex')
-                ylabel({'$y_{t}$'},'Interpreter','latex') 
-            title('Production Function')
-            
-            fig_name = strcat(figout,'ypol.fig');
-            savefig(fig_name)
-            
-            %% Plot capital policy function.
-            
-            figure(2)
-            
-            plot(par.kgrid,sol.k)
-                xlabel({'$k_{t}$'},'Interpreter','latex')
-                ylabel({'$k_{t+1}$'},'Interpreter','latex') 
+            xlabel({'$k_t$'}, 'Interpreter','latex')
+            ylabel({'$y_t$'}, 'Interpreter','latex')
+            title('Production Function: Multiple Skills and A States')
+            legend show
+            hold off
+
+            figure (2)
+            hold on
+            c = 1;
+            for s = 1:par.slen
+                for j = A_indices
+                    plot(par.kgrid, sol.k(:,j,s), ...
+                        'DisplayName', ['Skill ', num2str(s), ', A=', num2str(j)], ...
+                        'Color', colors(c,:));
+                    c = c + 1;
+                end
+            end
+            xlabel({'$k_t$'}, 'Interpreter','latex')
+            ylabel({'$k_{t+1}$'}, 'Interpreter','latex')
             title('Capital Policy Function')
-            
-            fig_name = strcat(figout,'kpol.fig');
-            savefig(fig_name)
-            
-            %% Plot consumption policy function.
-            
-            figure(3)
-            
-            plot(par.kgrid,sol.c)
-                xlabel({'$k_{t}$'},'Interpreter','latex')
-                ylabel({'$c_{t}$'},'Interpreter','latex') 
+            legend show
+            hold off
+
+            figure (3)
+            hold on
+            c = 1;
+            for s = 1:par.slen
+                for j = A_indices
+                    plot(par.kgrid, sol.c(:,j,s), ...
+                        'DisplayName', ['Skill ', num2str(s), ', A=', num2str(j)], ...
+                        'Color', colors(c,:));
+                    c = c + 1;
+                end
+            end
+            xlabel({'$k_t$'}, 'Interpreter','latex')
+            ylabel({'$c_t$'}, 'Interpreter','latex')
             title('Consumption Policy Function')
-            
-            fig_name = strcat(figout,'cpol.fig');
-            savefig(fig_name)
-            
-            %% Plot investrment policy function.
-            
-            figure(4)
-            
-            plot(par.kgrid,sol.i)
-                xlabel({'$k_{t}$'},'Interpreter','latex')
-                ylabel({'$i_{t}$'},'Interpreter','latex') 
+            legend show
+            hold off
+
+            figure (4)
+            hold on
+            c = 1;
+            for s = 1:par.slen
+                for j = A_indices
+                    plot(par.kgrid, sol.i(:,j,s), ...
+                        'DisplayName', ['Skill ', num2str(s), ', A=', num2str(j)], ...
+                        'Color', colors(c,:));
+                    c = c + 1;
+                end
+            end
+            xlabel({'$k_t$'}, 'Interpreter','latex')
+            ylabel({'$i_t$'}, 'Interpreter','latex')
             title('Investment Policy Function')
-            
-            fig_name = strcat(figout,'ipol.fig');
-            savefig(fig_name)
-            
-            
-            %% Plot labor supply policy function.
-            
+            legend show
+            hold off
+
             figure(5)
-            
-            plot(par.kgrid,sol.n)
-                xlabel({'$k_{t}$'},'Interpreter','latex')
-                ylabel({'$n_{t}$'},'Interpreter','latex') 
+            hold on
+            c = 1;
+            for s = 1:par.slen
+                for j = A_indices
+                    plot(par.kgrid, sol.n(:,j,s), ...
+                        'DisplayName', ['Skill ', num2str(s), ', A=', num2str(j)], ...
+                        'Color', colors(c,:));
+                    c = c + 1;
+                end
+            end
+            xlabel({'$k_t$'}, 'Interpreter','latex')
+            ylabel({'$n_t$'}, 'Interpreter','latex')
             title('Labor Supply Policy Function')
-            
-            fig_name = strcat(figout,'npol.fig');
-            savefig(fig_name)
-            
-            %% Plot value function.
-            
-            figure(6)
-            
-            plot(par.kgrid,sol.v)
-                xlabel({'$k_{t}$'},'Interpreter','latex')
-                ylabel({'$v_t(k_t,A_t)$'},'Interpreter','latex') 
+            legend show
+            hold off
+
+            figure (6)
+            hold on
+            c = 1;
+            for s = 1:par.slen
+                for j = A_indices
+                    plot(par.kgrid, sol.v(:,j,s), ...
+                        'DisplayName', ['Skill ', num2str(s), ', A=', num2str(j)], ...
+                        'Color', colors(c,:));
+                    c = c + 1;
+                end
+            end
+            xlabel({'$k_t$'}, 'Interpreter','latex')
+            ylabel({'$v(k_t, A_t)$'}, 'Interpreter','latex')
             title('Value Function')
-
-            fig_name = strcat(figout,'vfun.fig');
-            savefig(fig_name)
-            
-            %% Plot simulated output.
-
-            tgrid = linspace(1,par.T,par.T);
-
-            figure(7)
-
-            plot(tgrid,sim.ysim)
-                xlabel({'Time'},'Interpreter','latex')
-                ylabel({'$y^{sim}_t$'},'Interpreter','latex') 
-            title('Simulated Output')
-
-            fig_name = strcat(figout,'ysim.fig');
-            savefig(fig_name)
-
-            %% Plot simulated capital choice.
-
-            figure(8)
-
-            plot(tgrid,sim.ksim)
-                xlabel({'Time'},'Interpreter','latex')
-                ylabel({'$k^{sim}_t$'},'Interpreter','latex') 
-            title('Simulated Capital Choice')
-
-            fig_name = strcat(figout,'ksim.fig');
-            savefig(fig_name)
-
-            %% Plot simulated consumption.
-
-            figure(9)
-
-            plot(tgrid,sim.csim)
-                xlabel({'Time'},'Interpreter','latex')
-                ylabel({'$c^{sim}_t$'},'Interpreter','latex') 
-            title('Simulated Consumption')
-
-            fig_name = strcat(figout,'csim.fig');
-            savefig(fig_name)
-
-            %% Plot simulated investment.
-
-            figure(10)
-
-            plot(tgrid,sim.isim)
-                xlabel({'Time'},'Interpreter','latex')
-                ylabel({'$i^{sim}_t$'},'Interpreter','latex') 
-            title('Simulated Investment')
-
-            fig_name = strcat(figout,'isim.fig');
-            savefig(fig_name)
-
-
-            %% Plot simulated labor supply.
-
-            figure(11)
-
-            plot(tgrid,sim.nsim)
-                xlabel({'Time'},'Interpreter','latex')
-                ylabel({'$n^{sim}_t$'},'Interpreter','latex') 
-            title('Simulated Labor Supply')
-
-            fig_name = strcat(figout,'nsim.fig');
-            savefig(fig_name)
-
-            %% Plot simulated utility.
-
-            figure(12)
-
-            plot(tgrid,sim.usim)
-                xlabel({'Time'},'Interpreter','latex')
-                ylabel({'$u^{sim}_t$'},'Interpreter','latex') 
-            title('Simulated Utility')
-
-            fig_name = strcat(figout,'usim.fig');
-            savefig(fig_name)
-
-            %% Plot simulated productivity.
-
-            figure(13)
-
-            plot(tgrid,sim.Asim)
-                xlabel({'Time'},'Interpreter','latex')
-                ylabel({'$A^{sim}_t$'},'Interpreter','latex') 
-            title('Simulated Productivity')
-
-            fig_name = strcat(figout,'Asim.fig');
-            savefig(fig_name)
-
+            legend show
+            hold off
         end
-        
     end
 end
+       
