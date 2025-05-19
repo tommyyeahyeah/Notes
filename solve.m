@@ -31,7 +31,7 @@ classdef solve
             %% Labor supply
             fprintf('------------Solving for Labor Supply.------------\n\n')
 
-            opts = optimset('TolX', 1e-6, 'Display', 'off');  %% ✅ NEW: tighter solver options
+            opts = optimset('TolX', 1e-6, 'Display', 'off');  
             
             for h1 = 1:klen
                 for h2 = 1:klen
@@ -43,7 +43,6 @@ classdef solve
                                     * (par.w(s) * Agrid(h3) * (1 - alpha) * (kgrid(h1)^alpha) * n^(-alpha)) ...
                                     + gamma * (1 - n)^(1 / nu);
             
-                            %% ✅ NEW: restrict upper bound to avoid n = 1 and stabilize
                             n0(h1,h2,h3,s) = fminbnd(fn, 0.001, 0.999, opts);
                         end
                     end
@@ -72,7 +71,7 @@ classdef solve
                             g = max(mean(T(:)), 1e-4);
 
                             feasible = (c > 1e-6) & (i >= 0);
-                            vall = -Inf(length(kgrid), 1); %% ✅ required init
+                            vall = -Inf(length(kgrid), 1); %% 
 
                             if any(feasible)
                                 cvec = c(feasible);
